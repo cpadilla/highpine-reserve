@@ -1,3 +1,9 @@
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -24,8 +30,7 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  display: block;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -65,4 +70,17 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+.parallax-slide {
+  transition: transform 1.2s cubic-bezier(0.22, 0.44, 0, 1);
+  will-change: transform;
+}
+
+.parallax-slide.up-scroll {
+  transform: translate3d(0, 30vh, 0);
+}
+
+.parallax-slide.down-scroll {
+  transform: translate3d(0, -130vh, 0);
 }
