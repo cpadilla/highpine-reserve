@@ -78,7 +78,7 @@ button:focus-visible {
 }
 
 .parallax-slide.up-scroll {
-  transform: translate3d(0, 30vh, 0);
+  transform: translate3d(0, 10vh, 0);
 }
 
 .parallax-slide.down-scroll {
