@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 
-const images = [
-    "/mountains.jpg",
-    "/mountains-with-lake.jpg",
-    "/hiking.jpg",
-];
+type Props = {
+  images: string[];
+  onSlideChange: (index: number) => void;
+};
 
-export default function ParallaxScroll() {
+export default function ParallaxScroll({ images, onSlideChange }: Props) {
     const [currentSlide, setCurrentSlide] = useState(0);
     const ticking = useRef(false);
 
@@ -15,6 +14,7 @@ export default function ParallaxScroll() {
     const slideLockTime = 600;
 
     const backgroundsRef = useRef<HTMLDivElement[]>([]);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     const slideTimeout = () => {
         ticking.current = true;
@@ -23,6 +23,19 @@ export default function ParallaxScroll() {
         }, slideLockTime);
     };
 
+  useEffect(() => {
+      if (currentSlide === totalSlides - 1) {
+          // Wait for animation to complete, then unlock scroll
+          const timer = setTimeout(() => {
+              document.body.style.overflow = "auto";
+          }, 800); // matches your animation duration
+
+          return () => clearTimeout(timer);
+      } else {
+          // Lock scroll while inside ParallaxScroll
+          document.body.style.overflow = "hidden";
+      }
+  }, [currentSlide]);
 
     useEffect(() => {
         backgroundsRef.current.forEach((el, i) => {
@@ -33,8 +46,19 @@ export default function ParallaxScroll() {
     }, []);
 
     const handleScroll = (e: WheelEvent) => {
-        const delta = e.deltaY;
+        // Check to make sure we're visible before scrolling
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (rect) {
+            const isFullyVisible = Math.abs(rect.top) < 1 &&
+                Math.abs(rect.bottom - window.innerHeight) < 1;
 
+            console.log("isFullyVisible", isFullyVisible, "rect.top", rect?.top,
+                       "rect.bottom", rect?.bottom, "window.innerHeight", window.innerHeight);
+
+            if (!isFullyVisible) return;
+        }
+
+        const delta = e.deltaY;
         if (!ticking.current) {
             if (delta > scrollSensitivity && currentSlide < totalSlides - 1) {
                 goToNextSlide();
@@ -49,6 +73,8 @@ export default function ParallaxScroll() {
     const goToNextSlide = () => {
         setCurrentSlide((prev) => {
             const newSlide = prev + 1;
+
+            onSlideChange?.(newSlide);
 
             // Step 1: Pre-assign up-scroll to the new slide (if it's not already)
             const nextEl = backgroundsRef.current[newSlide];
@@ -119,7 +145,7 @@ export default function ParallaxScroll() {
 
     function Slide1() {
         return (
-            <div className="relative h-screen w-screen">
+            <div className="relative h-screen w-full overflow-x-hidden">
             {/* Centered title and tagline */}
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
             <h1 className="text-5xl font-bold text-white drop-shadow-lg">
@@ -138,7 +164,7 @@ export default function ParallaxScroll() {
 
     function Slide2() {
         return (
-            <div className="normal-case w-full flex justify-center px-4">
+            <div className="normal-case w-full overflow-x-hidden flex justify-center px-4">
             <div className="w-1/2 max-w-3xl md:w-1/2 bg-white/90 text-gray-800 px-6 py-8 rounded-2xl shadow-xl backdrop-blur-sm">
             <p className="text-base leading-relaxed">
             Nestled in the towering evergreens of the northern ridge, Highpine offers a peaceful escape into the heart of untouched wilderness. Breathe in the crisp mountain air, wander beneath sunlit canopies, and rediscover what it means to truly unwind.
@@ -150,7 +176,7 @@ export default function ParallaxScroll() {
 
     function Slide3() {
         return (
-            <div className="normal-case w-full flex justify-center px-4">
+            <div className="normal-case w-full overflow-x-hidden flex justify-center px-4">
             <div className="w-1/2 max-w-3xl md:w-1/2 bg-white/90 text-gray-800 px-6 py-8 rounded-2xl shadow-xl backdrop-blur-sm">
             <h2 className="text-2xl font-bold mb-4 text-center">About Highpine</h2>
             <p className="text-base leading-relaxed">
@@ -190,14 +216,16 @@ export default function ParallaxScroll() {
     }, [currentSlide]);
 
     return (
-        <div className="relative h-screen w-screen overflow-hidden font-mono text-white uppercase">
+        <div
+        ref={containerRef}
+        className="relative h-screen w-full overflow-hidden font-mono text-white uppercase">
         {images.map((src, i) => (
             <div
             key={i}
             ref={(el) => {
                 if (el) backgroundsRef.current[i] = el;
             }}
-            className="parallax-slide transition-transform duration-[1200ms] delay-0 absolute top-0 left-0 h-[110vh] w-screen bg-cover bg-center transition-transform duration-[1200ms] will-change-transform"
+            className="parallax-slide transition-transform duration-[1200ms] delay-0 absolute top-0 left-0 h-[110vh] w-full bg-cover bg-center transition-transform duration-[1200ms] will-change-transform"
             style={{ backgroundImage: `url(${src})`, zIndex: totalSlides - i }}
             >
                 {/* Content wrapper */}
